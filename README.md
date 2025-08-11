@@ -44,17 +44,19 @@ Initialize a new project using any template from this repository:
 
 ```bash
 # Initialize with a specific template
-cdk init --from-github rohang9000/cdk-pipeline-templates --template-path default --language typescript
+cdk init --from-github rohang9000/cdk-pipeline-templates --template-path default --language=typescript
 
 # Or use the shorthand for GitHub
-cdk init --from-github rohang9000/cdk-pipeline-templates --template-path S3Deploy --language python
+cdk init --from-github rohang9000/cdk-pipeline-templates --template-path S3Deploy --language=python
 ```
+
+**Note**: This repository contains multiple CDK pipeline templates, so you must specify `--template-path` to choose which template to use.
 
 ### Available Templates
 
 Choose from any of these pipeline templates:
 - `default` - Basic GitHub source with CodeBuild
-- `S3Source` - S3 source with CodeBuild
+- `S3Source` - S3 source with CodeBuild  
 - `LambdaInvoke` - GitHub source with Lambda invocation
 - `StepFunctionInvoke` - GitHub source with Step Function invocation
 - `S3Deploy` - GitHub source with S3 deployment
@@ -64,6 +66,11 @@ Choose from any of these pipeline templates:
 - `CFNDeploy` - GitHub source with CloudFormation deployment
 - `CFNStackSetsDeploy` - GitHub source with CloudFormation StackSets
 - `ECSDeploy` - GitHub source with ECS deployment
+
+Example usage:
+```bash
+cdk init --from-github rohang9000/cdk-pipeline-templates --template-path LambdaInvoke --language=typescript
+```
 
 ### Post-Initialization Setup
 
