@@ -44,10 +44,10 @@ Initialize a new project using any template from this repository:
 
 ```bash
 # Initialize with a specific template
-cdk init --from-github rupta/cdk-pipeline-templates --template-path default --language typescript
+cdk init --from-github rohang9000/cdk-pipeline-templates --template-path default --language typescript
 
 # Or use the shorthand for GitHub
-cdk init --from-github rupta/cdk-pipeline-templates --template-path S3Deploy --language python
+cdk init --from-github rohang9000/cdk-pipeline-templates --template-path S3Deploy --language python
 ```
 
 ### Available Templates
