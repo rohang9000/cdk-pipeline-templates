@@ -83,7 +83,7 @@ export class PipelineStack extends cdk.Stack {
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'JenkinsBuildPipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub('aws-samples/aws-cdk-examples', 'main'),
+        input: CodePipelineSource.gitHub('OWNER/REPO', 'main'),
         commands: [
           'npm ci',
           'npm run build',

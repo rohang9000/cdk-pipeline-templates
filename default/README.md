@@ -24,9 +24,9 @@ Basic GitHub source pipeline with CodeBuild and multi-stage deployment.
    npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
    ```
 
-2. **Update configuration:**
-   - Replace `aws-samples/aws-cdk-examples` with your GitHub repository
-   - Update account/region in the app entry point
+2. **Update pipeline configuration:**
+   - Replace `'OWNER/REPO'` in `lib/pipeline-stack.*` with your GitHub repository (e.g., `'myusername/my-pipeline-repo'`)
+   - Update account/region in the app entry point if needed
 
 3. **Deploy the pipeline:**
    ```bash

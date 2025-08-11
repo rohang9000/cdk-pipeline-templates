@@ -75,11 +75,31 @@ cdk init --from-github rohang9000/cdk-pipeline-templates --template-path LambdaI
 ### Post-Initialization Setup
 
 After running `cdk init`, follow these steps:
-1. Install dependencies (automatically done by `cdk init`)
-2. Configure GitHub authentication
-3. Update repository URL and account/region
-4. Bootstrap CDK environment: `cdk bootstrap`
-5. Deploy the pipeline: `cdk deploy`
+
+1. **Push your code to GitHub:**
+   ```bash
+   # Create a new repository on GitHub, then:
+   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+   git push -u origin main
+   ```
+
+2. **Update pipeline configuration:**
+   - Replace `'OWNER/REPO'` in `lib/pipeline-stack.*` with your GitHub repository (e.g., `'myusername/my-pipeline-repo'`)
+   - Update account/region in the app entry point if needed
+
+3. **Configure GitHub authentication:**
+   - Store your GitHub personal access token in AWS Secrets Manager as `github-token`
+   - Grant the token `repo` permissions for your repository
+
+4. **Bootstrap CDK environment:**
+   ```bash
+   cdk bootstrap --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   ```
+
+5. **Deploy the pipeline:**
+   ```bash
+   cdk deploy
+   ```
 
 ## Prerequisites
 

@@ -20,7 +20,7 @@ class PipelineStack(cdk.Stack):
             pipeline_name="JenkinsBuildPipeline",
             synth=pipelines.ShellStep(
                 "Synth",
-                input=pipelines.CodePipelineSource.git_hub("aws-samples/aws-cdk-examples", "main"),
+                input=pipelines.CodePipelineSource.git_hub("OWNER/REPO", "main"),
                 commands=[
                     "pip install -r requirements.txt",
                     "npx cdk synth"

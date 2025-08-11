@@ -9,7 +9,7 @@ class PipelineStack extends cdk.Stack {
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'ExternalSourcePipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub('aws-samples/aws-cdk-examples', 'main'),
+        input: CodePipelineSource.gitHub('OWNER/REPO', 'main'),
         commands: [
           'npm ci',
           'npm run build',
