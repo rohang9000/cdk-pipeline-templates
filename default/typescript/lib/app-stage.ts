@@ -12,6 +12,8 @@ export class AppStage extends cdk.Stage {
    * @param scope - The scope in which to define this construct
    * @param id - The scoped construct ID
    * @param props - Stage properties
+   * @default undefined
+   * @default undefined
    */
   constructor(scope: Construct, id: string, props?: cdk.StageProps) {
     super(scope, id, props);

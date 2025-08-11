@@ -14,6 +14,7 @@ export class AppStack extends cdk.Stack {
    * @param scope - The scope in which to define this construct
    * @param id - The scoped construct ID
    * @param props - Stack properties
+   * @default undefined
    */
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
