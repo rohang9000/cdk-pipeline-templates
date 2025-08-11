@@ -1,0 +1,15 @@
+const cdk = require('aws-cdk-lib');
+const { Template } = require('aws-cdk-lib/assertions');
+const { PipelineStack } = require('../lib/pipeline-stack');
+
+test('Pipeline Stack Created', () => {
+  const app = new cdk.App();
+  const stack = new PipelineStack(app, 'TestPipelineStack');
+  const template = Template.fromStack(stack);
+
+  template.hasResourceProperties('AWS::CodePipeline::Pipeline', {
+    Name: 'DefaultPipeline'
+  });
+  
+  template.resourceCountIs('AWS::CodePipeline::Pipeline', 1);
+});

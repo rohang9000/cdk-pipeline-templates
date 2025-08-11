@@ -1,0 +1,19 @@
+{
+  "name": "cdk-pipeline-default",
+  "version": "1.0.0",
+  "description": "Default CDK Pipeline Template",
+  "main": "app.js",
+  "scripts": {
+    "build": "echo 'No build step required for JavaScript'",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "aws-cdk": "2.100.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.100.0",
+    "constructs": "^10.0.0"
+  }
+}

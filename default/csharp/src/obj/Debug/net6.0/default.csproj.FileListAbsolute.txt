@@ -1,0 +1,5 @@
+/Users/rupta/cdk-pipeline-templates/default/csharp/src/obj/Debug/net6.0/default.csproj.AssemblyReference.cache
+/Users/rupta/cdk-pipeline-templates/default/csharp/src/obj/Debug/net6.0/default.GeneratedMSBuildEditorConfig.editorconfig
+/Users/rupta/cdk-pipeline-templates/default/csharp/src/obj/Debug/net6.0/default.AssemblyInfoInputs.cache
+/Users/rupta/cdk-pipeline-templates/default/csharp/src/obj/Debug/net6.0/default.AssemblyInfo.cs
+/Users/rupta/cdk-pipeline-templates/default/csharp/src/obj/Debug/net6.0/default.csproj.CoreCompileInputs.cache

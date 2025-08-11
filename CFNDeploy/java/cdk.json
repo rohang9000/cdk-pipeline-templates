@@ -1,0 +1,11 @@
+{
+  "app": "mvn -e -q compile exec:java -Dexec.mainClass=com.example.PipelineApp -Dexec.mainClass=com.example.PipelineApp",
+  "watch": {
+    "include": ["**"],
+    "exclude": ["README.md", "cdk*.json", "target", "pom.xml", "src/test"]
+  },
+  "context": {
+    "aws-cdk:enableDiffNoFail": true,
+    "@aws-cdk/core:stackRelativeExports": true
+  }
+}
