@@ -83,23 +83,38 @@ After running `cdk init`, follow these steps:
    git push -u origin main
    ```
 
-2. **Update pipeline configuration:**
-   - Replace `'OWNER/REPO'` in `lib/pipeline-stack.*` with your GitHub repository (e.g., `'myusername/my-pipeline-repo'`)
-   - Update account/region in the app entry point if needed
+2. **Configure the template:**
+   
+   ⚠️ **REQUIRED**: Update repository references in your pipeline stack:
+   - **TypeScript**: Replace `'OWNER/REPO'` in `lib/pipeline-stack.ts`
+   - **Python**: Replace `"OWNER/REPO"` in `templatename/pipeline_stack.py`
+   - **Other languages**: See [CONFIGURATION.md](./CONFIGURATION.md) for details
 
-3. **Configure GitHub authentication:**
-   - Store your GitHub personal access token in AWS Secrets Manager as `github-token`
-   - Grant the token `repo` permissions for your repository
-
-4. **Bootstrap CDK environment:**
+3. **Set up authentication:**
    ```bash
-   cdk bootstrap --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   # For GitHub-based templates
+   aws secretsmanager create-secret \
+     --name github-token \
+     --secret-string "ghp_your_github_token_here"
    ```
 
-5. **Deploy the pipeline:**
+4. **Configure AWS environment:**
    ```bash
-   cdk deploy
+   export CDK_DEFAULT_ACCOUNT=123456789012
+   export CDK_DEFAULT_REGION=us-east-1
    ```
+
+5. **Bootstrap CDK environment:**
+   ```bash
+   npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   ```
+
+6. **Deploy the pipeline:**
+   ```bash
+   npx cdk deploy
+   ```
+
+📖 **For detailed configuration instructions, see [CONFIGURATION.md](./CONFIGURATION.md)**
 
 ## Prerequisites
 

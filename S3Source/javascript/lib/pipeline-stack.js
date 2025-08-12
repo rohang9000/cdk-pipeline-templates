@@ -1,3 +1,5 @@
+const iam = require('aws-cdk-lib/aws-iam');
+const codebuild = require('aws-cdk-lib/aws-codebuild');
 const cdk = require('aws-cdk-lib');
 const s3 = require('aws-cdk-lib/aws-s3');
 const { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } = require('aws-cdk-lib/pipelines');
@@ -13,6 +15,32 @@ class PipelineStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     const pipeline = new CodePipeline(this, 'Pipeline', {
@@ -27,6 +55,32 @@ class PipelineStack extends cdk.Stack {
       }),
       dockerEnabledForSynth: true,
       dockerEnabledForSelfMutation: true,
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Add test stage
@@ -58,6 +112,32 @@ class PipelineStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'SourceBucketName', {
       value: sourceBucket.bucketName,
       description: 'S3 bucket for source artifacts - upload your source.zip here',
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
   }
 }

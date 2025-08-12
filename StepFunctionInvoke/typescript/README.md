@@ -1,48 +1,95 @@
-# Default CDK Pipeline Template (TypeScript)
+# StepFunctionInvoke Pipeline Template (TypeScript)
 
-This template creates a standard CDK pipeline with GitHub source, CodeBuild for build and test, and EC2 deployment.
+Pipeline with Step Function invocation for complex workflow orchestration.
 
-## Architecture
+## Features
 
-- **Source**: GitHub repository (aws-samples/aws-cdk-examples)
-- **Build**: AWS CodeBuild
-- **Test**: AWS CodeBuild
-- **Deploy**: EC2 deployment via CodeDeploy
+- Multi-stage deployment (Test → Production)\n- Manual approval gate for production\n- Self-mutating pipeline\n- CodeBuild integration with Node.js 18\n- Step Function for workflow orchestration
 
 ## Prerequisites
 
 1. AWS CLI configured with appropriate permissions
-2. AWS CDK installed: `npm install -g aws-cdk`
+2. AWS CDK installed (`npm install -g aws-cdk`)
+3. Node.js 18+ installed
+3. GitHub personal access token stored in AWS Secrets Manager as `github-token`
+4. Bootstrapped CDK environment
 
-## Setup
+## Required Configuration
 
-1. **Install dependencies**:
+⚠️ **You MUST update these values before deployment:**
+
+### 1. Repository Configuration
+
+**File**: `lib/pipeline-stack.ts`  
+**Change**: Replace repository references with your actual repository
+
+```typescript
+// BEFORE
+input: CodePipelineSource.gitHub('OWNER/REPO', 'main', {
+
+// AFTER
+input: CodePipelineSource.gitHub('your-username/your-repo-name', 'main', {
+```
+
+### 2. GitHub Token Setup
+
+Store your GitHub personal access token in AWS Secrets Manager:
+
+```bash
+aws secretsmanager create-secret \
+  --name github-token \
+  --secret-string "ghp_your_github_personal_access_token_here"
+```
+
+**Token Requirements:**
+- Scope: `repo` (for private repos) or `public_repo` (for public repos)
+- Generate at: https://github.com/settings/tokens
+
+### 3. AWS Environment
+
+Set your AWS account and region:
+
+```bash
+export CDK_DEFAULT_ACCOUNT=123456789012
+export CDK_DEFAULT_REGION=us-east-1
+```
+
+Or update `bin/stepfunctioninvoke.ts` with hardcoded values:
+
+```typescript
+env: {
+  account: '123456789012',
+  region: 'us-east-1',
+}
+```
+
+## Setup Steps
+
+1. **Bootstrap CDK environment:**
+   ```bash
+   npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Bootstrap CDK** (first time only):
+3. **Update configuration** (see Required Configuration above)
+
+4. **Deploy the pipeline:**
    ```bash
-   cdk bootstrap
+   npx cdk deploy
    ```
 
-3. **Deploy**:
-   ```bash
-   cdk deploy
-   ```
+## Usage
 
-## Customization
+After initial deployment, the pipeline will automatically trigger on code changes to your repository.
 
-To use your own repository, modify `lib/pipeline-stack.ts`:
-```typescript
-input: CodePipelineSource.gitHub('your-org/your-repo', 'main', {
-  authentication: cdk.SecretValue.secretsManager('github-token'),
-})
-```
+## Architecture
 
-## What Gets Deployed
+- **Source**: GitHub repository\n- **Orchestration**: Step Function workflow\n- **Build**: AWS CodeBuild (Node.js 18)\n- **Test Stage**: Automated deployment with unit tests\n- **Production Stage**: Manual approval + deployment
 
-- **CodePipeline**: Self-mutating pipeline
-- **EC2 Instance**: Application deployment target
-- **CodeDeploy**: Deployment automation
-- **VPC**: Secure network configuration
+## Troubleshooting
+
+- **Authentication fails**: Check your repository access configuration\n- **CDK synthesis fails**: Ensure you have the required permissions and CDK is bootstrapped\n- **Build fails**: Check that your repository has the expected structure

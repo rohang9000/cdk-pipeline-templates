@@ -1,4 +1,6 @@
 const cdk = require('aws-cdk-lib');
+const iam = require('aws-cdk-lib/aws-iam');
+const codebuild = require('aws-cdk-lib/aws-codebuild');
 const { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } = require('aws-cdk-lib/pipelines');
 const { AppStage } = require('./app-stage');
 
@@ -16,6 +18,31 @@ class PipelineStack extends cdk.Stack {
           'npx cdk synth'
         ]
       }),
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Add test stage

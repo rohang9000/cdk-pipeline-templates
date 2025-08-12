@@ -1,12 +1,15 @@
-/**
- * Pipeline stack with multi-stage deployment.
- */
 import * as cdk from 'aws-cdk-lib';
 import * as codestarconnections from 'aws-cdk-lib/aws-codestarconnections';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
 import { AppStage } from './app-stage';
 
+/**
+ * Pipeline stack with external source (GitHub, Bitbucket, etc.) via CodeConnection.
+ * Uses AWS CodeStar Connections for secure integration with external repositories.
+ */
 export class PipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -20,7 +23,7 @@ export class PipelineStack extends cdk.Stack {
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'ExternalSourcePipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.connection('aws-samples/aws-cdk-examples', 'main', {
+        input: CodePipelineSource.connection('OWNER/REPO', 'main', {
           connectionArn: codeConnection.attrConnectionArn,
         }),
         commands: [
@@ -31,6 +34,31 @@ export class PipelineStack extends cdk.Stack {
       }),
       dockerEnabledForSynth: true,
       dockerEnabledForSelfMutation: true,
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Add test stage

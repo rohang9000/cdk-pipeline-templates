@@ -1,82 +1,95 @@
-# Default CDK Pipeline Template (Python)
+# CFNDeploy Pipeline Template (Python)
 
-This template creates a standard CDK pipeline with GitHub source, CodeBuild for build and test, and EC2 deployment.
+Pipeline with CloudFormation deployment for infrastructure as code.
 
-## Architecture
+## Features
 
-- **Source**: GitHub repository
-- **Build**: AWS CodeBuild
-- **Test**: AWS CodeBuild
-- **Deploy**: EC2 deployment via CodeDeploy
+- Multi-stage deployment (Test → Production)\n- Manual approval gate for production\n- Self-mutating pipeline\n- CodeBuild integration with Node.js 18\n- CloudFormation deployment
 
 ## Prerequisites
 
 1. AWS CLI configured with appropriate permissions
-2. AWS CDK installed: `npm install -g aws-cdk`
+2. AWS CDK installed (`npm install -g aws-cdk`)
 3. Python 3.8+ installed
-4. GitHub personal access token with repository access
+3. Repository access configured
+4. Bootstrapped CDK environment
 
-## Setup
+## Required Configuration
 
-After running `cdk init pipeline-default --language python`, follow these steps:
+⚠️ **You MUST update these values before deployment:**
 
-1. **Create and activate virtual environment**:
+### 1. Repository Configuration
+
+**File**: `cfndeploy/pipeline_stack.py`  
+**Change**: Replace repository references with your actual repository
+
+```python
+# BEFORE
+input=pipelines.CodePipelineSource.git_hub("OWNER/REPO", "main",
+
+# AFTER
+input=pipelines.CodePipelineSource.git_hub("your-username/your-repo-name", "main",
+```
+
+### 2. GitHub Token Setup
+
+Store your GitHub personal access token in AWS Secrets Manager:
+
+```bash
+aws secretsmanager create-secret \
+  --name github-token \
+  --secret-string "ghp_your_github_personal_access_token_here"
+```
+
+**Token Requirements:**
+- Scope: `repo` (for private repos) or `public_repo` (for public repos)
+- Generate at: https://github.com/settings/tokens
+
+### 3. AWS Environment
+
+Set your AWS account and region:
+
+```bash
+export CDK_DEFAULT_ACCOUNT=123456789012
+export CDK_DEFAULT_REGION=us-east-1
+```
+
+Or update `app.py` with hardcoded values:
+
+```python
+PipelineStack(app, "cfndeployPipelineStack", env=cdk.Environment(
+    account="123456789012",
+    region="us-east-1"
+))
+```
+
+## Setup Steps
+
+1. **Bootstrap CDK environment:**
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
    ```
 
-2. **Install dependencies**:
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure GitHub authentication**:
+3. **Update configuration** (see Required Configuration above)
+
+4. **Deploy the pipeline:**
    ```bash
-   aws secretsmanager create-secret --name github-token --secret-string "your-github-personal-access-token"
+   npx cdk deploy
    ```
 
-4. **Update configuration**:
-   - Edit `stacks/pipeline_stack.py`: Replace `OWNER/REPO` with your GitHub repository
-   - Edit `app.py`: Update account and region (or use environment variables)
+## Usage
 
-5. **Bootstrap CDK** (first time only):
-   ```bash
-   cdk bootstrap
-   ```
+After initial deployment, the pipeline will automatically trigger on code changes to your repository.
 
-6. **Deploy**:
-   ```bash
-   cdk deploy
-   ```
+## Architecture
 
-## File Structure
+- **Source**: GitHub repository\n- **Deploy**: CloudFormation\n- **Build**: AWS CodeBuild (Node.js 18)\n- **Test Stage**: Automated deployment with unit tests\n- **Production Stage**: Manual approval + deployment
 
-```
-├── app.py                    # CDK app entry point
-├── stacks/
-│   ├── __init__.py
-│   ├── pipeline_stack.py     # Pipeline definition
-│   └── app_stack.py          # Application stack
-├── requirements.txt          # Python dependencies
-├── cdk.json                 # CDK configuration
-└── README.md                # This file
-```
+## Troubleshooting
 
-## Customization
-
-- Modify build commands in the `ShellStep`
-- Add additional test stages
-- Configure different deployment targets
-- Add manual approval steps
-- Customize EC2 instance configuration
-
-## Testing
-
-Add your tests and update the test command in `pipeline_stack.py`:
-```python
-commands=[
-    "pip install -r requirements.txt",
-    "python -m pytest tests/ -v"  # Your test command
-]
-```
+- **Authentication fails**: Check your repository access configuration\n- **CDK synthesis fails**: Ensure you have the required permissions and CDK is bootstrapped\n- **Build fails**: Check that your repository has the expected structure

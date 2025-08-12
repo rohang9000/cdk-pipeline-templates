@@ -1,4 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
 import { AppStage } from './app-stage';
@@ -23,7 +25,9 @@ export class PipelineStack extends cdk.Stack {
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'DefaultPipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub('OWNER/REPO', 'main'),
+        input: CodePipelineSource.gitHub('OWNER/REPO', 'main', {
+          authentication: cdk.SecretValue.secretsManager('github-token')
+        }),
         commands: [
           'npm ci',
           'npm run build',
@@ -32,6 +36,31 @@ export class PipelineStack extends cdk.Stack {
       }),
       dockerEnabledForSynth: true,
       dockerEnabledForSelfMutation: true,
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     /** Test stage with automated unit testing */

@@ -1,79 +1,95 @@
-# S3Deploy CDK Pipeline Template (TypeScript)
+# S3Deploy Pipeline Template (TypeScript)
 
-This template creates a CDK pipeline for deploying static websites to S3 with CloudFront distribution.
+Pipeline with S3 deployment for static website hosting.
 
-## Architecture
+## Features
 
-- **Source**: GitHub repository
-- **Build**: AWS CodeBuild (for building static assets)
-- **Test**: Frontend testing (unit, integration)
-- **Deploy**: S3 bucket with CloudFront distribution
+- Multi-stage deployment (Test → Production)\n- Manual approval gate for production\n- Self-mutating pipeline\n- CodeBuild integration with Node.js 18\n- S3 deployment for static websites
 
 ## Prerequisites
 
 1. AWS CLI configured with appropriate permissions
-2. AWS CDK installed: `npm install -g aws-cdk`
-3. GitHub personal access token with repository access
+2. AWS CDK installed (`npm install -g aws-cdk`)
+3. Node.js 18+ installed
+3. Repository access configured
+4. Bootstrapped CDK environment
 
-## Setup
+## Required Configuration
 
-After running `cdk init pipeline-s3deploy --language typescript`, follow these steps:
+⚠️ **You MUST update these values before deployment:**
 
-1. **Install dependencies**:
+### 1. Repository Configuration
+
+**File**: `lib/pipeline-stack.ts`  
+**Change**: Replace repository references with your actual repository
+
+```typescript
+// BEFORE
+input: CodePipelineSource.gitHub('OWNER/REPO', 'main', {
+
+// AFTER
+input: CodePipelineSource.gitHub('your-username/your-repo-name', 'main', {
+```
+
+### 2. GitHub Token Setup
+
+Store your GitHub personal access token in AWS Secrets Manager:
+
+```bash
+aws secretsmanager create-secret \
+  --name github-token \
+  --secret-string "ghp_your_github_personal_access_token_here"
+```
+
+**Token Requirements:**
+- Scope: `repo` (for private repos) or `public_repo` (for public repos)
+- Generate at: https://github.com/settings/tokens
+
+### 3. AWS Environment
+
+Set your AWS account and region:
+
+```bash
+export CDK_DEFAULT_ACCOUNT=123456789012
+export CDK_DEFAULT_REGION=us-east-1
+```
+
+Or update `bin/s3deploy.ts` with hardcoded values:
+
+```typescript
+env: {
+  account: '123456789012',
+  region: 'us-east-1',
+}
+```
+
+## Setup Steps
+
+1. **Bootstrap CDK environment:**
+   ```bash
+   npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Configure GitHub authentication**:
+3. **Update configuration** (see Required Configuration above)
+
+4. **Deploy the pipeline:**
    ```bash
-   aws secretsmanager create-secret --name github-token --secret-string "your-github-personal-access-token"
+   npx cdk deploy
    ```
 
-3. **Update configuration**:
-   - Edit `lib/pipeline-stack.ts`: Replace `OWNER/REPO` with your GitHub repository
-   - Edit `bin/app.ts`: Update account and region
+## Usage
 
-4. **Bootstrap CDK** (first time only):
-   ```bash
-   cdk bootstrap
-   ```
+After initial deployment, the pipeline will automatically trigger on code changes to your repository.
 
-5. **Deploy**:
-   ```bash
-   cdk deploy
-   ```
+## Architecture
 
-## What Gets Deployed
+- **Source**: GitHub repository\n- **Deploy**: S3 static website\n- **Build**: AWS CodeBuild (Node.js 18)\n- **Test Stage**: Automated deployment with unit tests\n- **Production Stage**: Manual approval + deployment
 
-- **S3 Bucket**: Configured for static website hosting
-- **CloudFront Distribution**: Global CDN for fast content delivery
-- **Sample Website**: Basic HTML page (replace with your content)
+## Troubleshooting
 
-## Customization
-
-- Replace the sample HTML in `lib/app-stack.ts` with your build artifacts
-- Modify build commands in the pipeline to match your frontend framework
-- Add custom domain and SSL certificate
-- Configure additional CloudFront behaviors
-
-## Frontend Framework Examples
-
-### React/Vue/Angular
-Update the build commands in `lib/pipeline-stack.ts`:
-```typescript
-commands: [
-  'npm ci',
-  'npm run build',  // Builds to dist/ or build/
-  'npx cdk synth'
-]
-```
-
-### Static Site Generators
-For Jekyll, Hugo, or similar:
-```typescript
-commands: [
-  'npm ci',
-  'hugo',  // or jekyll build
-  'npx cdk synth'
-]
-```
+- **Authentication fails**: Check your repository access configuration\n- **CDK synthesis fails**: Ensure you have the required permissions and CDK is bootstrapped\n- **Build fails**: Check that your repository has the expected structure

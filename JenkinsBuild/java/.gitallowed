@@ -1,0 +1,10 @@
+123456789012
+595575696350
+us-east-1
+us-west-2
+coral
+255, 127, 80
+\[255, 127, 80\]
+node_modules/.*
+.*node_modules.*
+.*coral.*

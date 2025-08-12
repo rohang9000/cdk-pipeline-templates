@@ -1,4 +1,6 @@
 using Amazon.CDK;
+using Amazon.CDK.AWS.CodeBuild;
+using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.Pipelines;
 using Constructs;
 
@@ -16,9 +18,41 @@ namespace Default
                 PipelineName = "defaultPipeline",
                 Synth = new ShellStep("Synth", new ShellStepProps
                 {
-                    Input = CodePipelineSource.GitHub("aws-samples/aws-cdk-examples", "main"),
+                    Input = CodePipelineSource.GitHub("OWNER/REPO", "main"),
                     Commands = new[] { "dotnet build src", "npx cdk synth" }
-                })
+                }),
+                SynthCodeBuildDefaults = new CodeBuildOptions
+                {
+                    BuildEnvironment = new BuildEnvironment
+                    {
+                        BuildImage = LinuxBuildImage.STANDARD_7_0
+                    },
+                    RolePolicy = new[]
+                    {
+                        new PolicyStatement(new PolicyStatementProps
+                        {
+                            Effect = Effect.ALLOW,
+                            Actions = new[]
+                            {
+                                "ec2:DescribeAvailabilityZones",
+                                "ec2:DescribeVpcs",
+                                "ec2:DescribeSubnets",
+                                "ec2:DescribeRouteTables",
+                                "ec2:DescribeSecurityGroups",
+                                "ssm:GetParameter",
+                                "ssm:GetParameters"
+                            },
+                            Resources = new[] { "*" }
+                        })
+                    }
+                },
+                SelfMutationCodeBuildDefaults = new CodeBuildOptions
+                {
+                    BuildEnvironment = new BuildEnvironment
+                    {
+                        BuildImage = LinuxBuildImage.STANDARD_7_0
+                    }
+                }
             });
 
             var testStage = pipeline.AddStage(new AppStage(this, "Test", new StageProps

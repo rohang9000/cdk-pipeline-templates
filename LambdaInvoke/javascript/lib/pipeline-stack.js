@@ -29,6 +29,32 @@ class PipelineStack extends cdk.Stack {
         };
       `),
       timeout: cdk.Duration.minutes(5),
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Grant permissions for validation function
@@ -54,6 +80,32 @@ class PipelineStack extends cdk.Stack {
           'npx cdk synth'
         ]
       }),
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Add test stage
@@ -101,11 +153,63 @@ class PipelineStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ValidationFunctionName', {
       value: validationFunction.functionName,
       description: 'Lambda function for post-deployment validation',
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     new cdk.CfnOutput(this, 'ValidationFunctionArn', {
       value: validationFunction.functionArn,
       description: 'Lambda function ARN for validation',
+    },
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
   }
 }

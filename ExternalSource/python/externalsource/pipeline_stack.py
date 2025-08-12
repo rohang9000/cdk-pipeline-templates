@@ -2,7 +2,7 @@
 Pipeline stack with multi-stage deployment.
 """
 import aws_cdk as cdk
-from aws_cdk import pipelines
+from aws_cdk import pipelines, aws_iam as iam, aws_codebuild as codebuild
 from constructs import Construct
 from .app_stack import AppStack
 
@@ -20,11 +20,66 @@ class PipelineStack(cdk.Stack):
             pipeline_name="ExternalSourcePipeline",
             synth=pipelines.ShellStep(
                 "Synth",
-                input=pipelines.CodePipelineSource.git_hub("OWNER/REPO", "main"),
+                input=pipelines.CodePipelineSource.git_hub(
+                    "OWNER/REPO", "main",
+                    authentication=cdk.SecretValue.secrets_manager("github-token")
+                ),
                 commands=[
                     "pip install -r requirements.txt",
                     "npx cdk synth"
                 ]
+            ,
+            synth_code_build_defaults=pipelines.CodeBuildOptions(
+                build_environment=codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+                ),
+                role_policy=[
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "ec2:DescribeAvailabilityZones",
+                            "ec2:DescribeVpcs",
+                            "ec2:DescribeSubnets",
+                            "ec2:DescribeRouteTables",
+                            "ec2:DescribeSecurityGroups",
+                            "ssm:GetParameter",
+                            "ssm:GetParameters"
+                        ],
+                        resources=["*"]
+                    )
+                ]
+            ),
+            self_mutation_code_build_defaults=pipelines.CodeBuildOptions(
+                build_environment=codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+                )
+            )
+        )
+        ,
+            synth_code_build_defaults=pipelines.CodeBuildOptions(
+                build_environment=codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+                ),
+                role_policy=[
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "ec2:DescribeAvailabilityZones",
+                            "ec2:DescribeVpcs",
+                            "ec2:DescribeSubnets",
+                            "ec2:DescribeRouteTables",
+                            "ec2:DescribeSecurityGroups",
+                            "ssm:GetParameter",
+                            "ssm:GetParameters"
+                        ],
+                        resources=["*"]
+                    )
+                ]
+            ),
+            self_mutation_code_build_defaults=pipelines.CodeBuildOptions(
+                build_environment=codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+                )
             )
         )
 

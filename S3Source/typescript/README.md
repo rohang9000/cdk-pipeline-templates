@@ -1,71 +1,77 @@
-# S3Source CDK Pipeline Template (TypeScript)
+# S3Source Pipeline Template (TypeScript)
 
-This template creates a CDK pipeline with S3 source, CodeBuild for build and test, and EC2 deployment.
+Pipeline with S3 source bucket for artifact storage and multi-stage deployment.
 
-## Architecture
+## Features
 
-- **Source**: S3 bucket
-- **Build**: AWS CodeBuild
-- **Test**: AWS CodeBuild
-- **Deploy**: EC2 deployment via CodeDeploy
+- Multi-stage deployment (Test → Production)\n- Manual approval gate for production\n- Self-mutating pipeline\n- CodeBuild integration with Node.js 18\n- S3 bucket for source artifacts
 
 ## Prerequisites
 
 1. AWS CLI configured with appropriate permissions
-2. AWS CDK installed: `npm install -g aws-cdk`
-3. Bootstrapped CDK environment: `cdk bootstrap`
-4. S3 bucket with your source code zip file
+2. AWS CDK installed (`npm install -g aws-cdk`)
+3. Node.js 18+ installed
+3. S3 bucket will be created automatically
+4. Bootstrapped CDK environment
 
-## Setup
+## Required Configuration
 
-After running `cdk init pipeline-s3source --language typescript`, follow these steps:
+⚠️ **You MUST update these values before deployment:**
 
-1. **Install dependencies**:
+### 1. Repository Configuration
+
+No repository configuration needed - uses S3 bucket for source artifacts.
+Upload your source code as `source.zip` to the created S3 bucket.
+
+### 2. S3 Bucket Access
+
+The pipeline will create an S3 bucket automatically. Upload your source code as `source.zip` to trigger the pipeline.
+
+### 3. AWS Environment
+
+Set your AWS account and region:
+
+```bash
+export CDK_DEFAULT_ACCOUNT=123456789012
+export CDK_DEFAULT_REGION=us-east-1
+```
+
+Or update `bin/s3source.ts` with hardcoded values:
+
+```typescript
+env: {
+  account: '123456789012',
+  region: 'us-east-1',
+}
+```
+
+## Setup Steps
+
+1. **Bootstrap CDK environment:**
+   ```bash
+   npx cdk bootstrap aws://ACCOUNT/REGION --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Create or identify your S3 source bucket**:
+3. **Update configuration** (see Required Configuration above)
+
+4. **Deploy the pipeline:**
    ```bash
-   aws s3 mb s3://my-pipeline-source-bucket
+   npx cdk deploy
    ```
 
-3. **Update configuration**:
-   - Edit `lib/pipeline-stack.ts`: Replace `YOUR_SOURCE_BUCKET` with your S3 bucket name
-   - Edit `lib/pipeline-stack.ts`: Replace `path/to/source.zip` with your source zip file path
-   - Edit `bin/app.ts`: Update account and region
+## Usage
 
-4. **Bootstrap CDK** (first time only):
-   ```bash
-   cdk bootstrap
-   ```
+Upload your source code as `source.zip` to the S3 bucket created by the pipeline to trigger deployments.
 
-5. **Deploy**:
-   ```bash
-   cdk deploy
-   ```
+## Architecture
 
-6. **Upload your source code**:
-   ```bash
-   zip -r source.zip . -x "node_modules/*" "cdk.out/*" "*.git/*"
-   aws s3 cp source.zip s3://my-pipeline-source-bucket/path/to/source.zip
-   ```
+- **Source**: S3 bucket\n- **Build**: AWS CodeBuild (Node.js 18)\n- **Test Stage**: Automated deployment with unit tests\n- **Production Stage**: Manual approval + deployment
 
-## File Structure
+## Troubleshooting
 
-```
-├── bin/
-│   └── app.ts              # CDK app entry point
-├── lib/
-│   ├── pipeline-stack.ts   # Pipeline definition
-│   ├── app-stack.ts        # Application stack
-│   └── app-stage.ts        # Application stage
-├── package.json            # Dependencies
-├── cdk.json               # CDK configuration
-├── tsconfig.json          # TypeScript configuration
-└── README.md              # This file
-```
-
-## S3 Source Configuration
-
-The pipeline monitors an S3 bucket for changes. When you upload a new version of your source code zip file, the pipeline automatically triggers.
+- **Pipeline not triggering**: Ensure you upload source.zip to the S3 bucket\n- **CDK synthesis fails**: Ensure you have the required permissions and CDK is bootstrapped\n- **Build fails**: Check that your repository has the expected structure

@@ -1,14 +1,15 @@
-/**
- * Pipeline stack with multi-stage deployment.
- */
 import * as cdk from 'aws-cdk-lib';
-import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
-import * as stepfunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
 import { AppStage } from './app-stage';
 
+/**
+ * Pipeline stack with Step Function invocation for complex workflow orchestration.
+ * Includes automated validation and workflow management after each deployment stage.
+ */
 export class PipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -49,38 +50,63 @@ export class PipelineStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(10),
     });
 
-    // Create IAM role for pipeline to invoke Step Function
-    const stepFunctionInvokeRole = new iam.Role(this, 'StepFunctionInvokeRole', {
-      assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      inlinePolicies: {
-        StepFunctionInvokePolicy: new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                'states:StartExecution',
-                'states:DescribeExecution',
-                'states:GetExecutionHistory'
-              ],
-              resources: [validationStateMachine.stateMachineArn]
-            })
-          ]
-        })
-      }
-    });
-
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'StepFunctionInvokePipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub('OWNER/REPO', 'main'),
-        commands: ['npm ci', 'npm run build', 'npx cdk synth']
+        input: CodePipelineSource.gitHub('OWNER/REPO', 'main', {
+          authentication: cdk.SecretValue.secretsManager('github-token')
+        }),
+        commands: [
+          'npm ci',
+          'npm run build',
+          'npx cdk synth'
+        ]
       }),
+      dockerEnabledForSynth: true,
+      dockerEnabledForSelfMutation: true,
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
+    // Add test stage
     const testStage = pipeline.addStage(new AppStage(this, 'Test', {
-      env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION }
+      env: { 
+        account: process.env.CDK_DEFAULT_ACCOUNT, 
+        region: process.env.CDK_DEFAULT_REGION 
+      }
     }));
 
+    testStage.addPre(new ShellStep('UnitTest', {
+      commands: [
+        'npm ci',
+        'npm test'
+      ]
+    }));
+
+    // Add Step Function invocation after test deployment
     testStage.addPost(new ShellStep('InvokeStepFunction', {
       commands: [
         `EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn ${validationStateMachine.stateMachineArn} --input '{"stage":"test","deploymentId":"'$(date +%s)'"}' --query 'executionArn' --output text)`,
@@ -90,12 +116,17 @@ export class PipelineStack extends cdk.Stack {
       ]
     }));
 
+    // Add production stage with manual approval
     const prodStage = pipeline.addStage(new AppStage(this, 'Prod', {
-      env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION }
+      env: { 
+        account: process.env.CDK_DEFAULT_ACCOUNT, 
+        region: process.env.CDK_DEFAULT_REGION 
+      }
     }));
 
     prodStage.addPre(new ManualApprovalStep('PromoteToProd'));
 
+    // Add Step Function invocation after production deployment
     prodStage.addPost(new ShellStep('InvokeStepFunction', {
       commands: [
         `EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn ${validationStateMachine.stateMachineArn} --input '{"stage":"prod","deploymentId":"'$(date +%s)'"}' --query 'executionArn' --output text)`,

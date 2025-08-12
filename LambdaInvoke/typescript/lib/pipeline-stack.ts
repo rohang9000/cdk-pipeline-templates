@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
@@ -10,16 +11,10 @@ import { AppStage } from './app-stage';
  * Includes automated testing and validation after each deployment stage.
  */
 export class PipelineStack extends cdk.Stack {
-  /**
-   * @param scope - The scope in which to define this construct
-   * @param id - The scoped construct ID
-   * @param props - Stack properties
-   * @default undefined
-   */
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    /** Lambda function for post-deployment validation and smoke testing */
+    // Lambda function for post-deployment validation and smoke testing
     const validationFunction = new lambda.Function(this, 'ValidationFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
@@ -58,13 +53,42 @@ export class PipelineStack extends cdk.Stack {
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'LambdaInvokePipeline',
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub('OWNER/REPO', 'main'),
+        input: CodePipelineSource.gitHub('OWNER/REPO', 'main', {
+          authentication: cdk.SecretValue.secretsManager('github-token')
+        }),
         commands: [
           'npm ci',
           'npm run build',
           'npx cdk synth'
         ]
       }),
+      dockerEnabledForSynth: true,
+      dockerEnabledForSelfMutation: true,
+      synthCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        },
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'ec2:DescribeAvailabilityZones',
+              'ec2:DescribeVpcs',
+              'ec2:DescribeSubnets',
+              'ec2:DescribeRouteTables',
+              'ec2:DescribeSecurityGroups',
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            resources: ['*']
+          })
+        ]
+      },
+      selfMutationCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0
+        }
+      }
     });
 
     // Add test stage
