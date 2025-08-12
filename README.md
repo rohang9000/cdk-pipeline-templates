@@ -46,11 +46,11 @@ Initialize a new project using any template from this repository:
 # Initialize with a specific template
 cdk init --from-github rohang9000/cdk-pipeline-templates --template-path default --language=typescript
 
-# Or use the shorthand for GitHub
+# Another example with different template
 cdk init --from-github rohang9000/cdk-pipeline-templates --template-path S3Deploy --language=python
 ```
 
-**Note**: This repository contains multiple CDK pipeline templates, so you must specify `--template-path` to choose which template to use.
+**Note**: This repository contains multiple CDK pipeline templates, so you must specify `--template-path` to choose which template to use. Since each template supports 5 languages, you must also specify `--language`.
 
 ### Available Templates
 
